@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//criar uma migration: yarn prisma migrate dev
+model User {
+  id         String   @id @default(uuid())
+  name       String
+  email      String
+  password   String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  // Relacionamento com Contas Bancárias(Um usuário pode ter várias contas)
+  contasBancarias ContaBancaria[]
+
+  @@map("users")
+}
+
+model ContaBancaria {
+  id         String   @id @default(uuid())
+  nome       String
+  saldo      Float    @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  // Relacionamento com Usuário - (uma conta pertence a um usuário)
+  user    User   @relation(fields: [user_id], references: [id])
+  user_id String
+
+  // Relacionamento com Transações - (uma conta bancaria pode ter várias transações)
+  transacoes Transacao[]
+
+  @@map("contasBancarias")
+}
+
+model Transacao {
+  id         String   @id @default(uuid())
+  descricao  String
+  valor      Float
+  data       DateTime @default(now())
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  // Relacionamento com Conta Bancária - (cada transação tem relação com uma conta )
+  contaBancaria ContaBancaria @relation(fields: [conta_id], references: [id])
+
+  // Relacionamento com Categoria -(uma transação pode ter uma categoria, opcionalmente)
+  categoria Categoria? @relation(fields: [categoria_id], references: [id])
+
+  conta_id     String
+  categoria_id String?
+
+  @@map("transacoes")
+}
+
+model Categoria {
+  id         String   @id @default(uuid())
+  nome       String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  // Relacionamento com Transações - (Uma categotia pode ter varias transações)
+  transacoes Transacao[]
+
+  @@map("categorias")
+}
